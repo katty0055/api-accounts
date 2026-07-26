@@ -1,6 +1,4 @@
-﻿using Accounts.Domain.Entities;
-
-namespace Accounts.Domain.Interfaces;
+﻿namespace Accounts.Domain;
 
 public interface IAccountRepository
 {

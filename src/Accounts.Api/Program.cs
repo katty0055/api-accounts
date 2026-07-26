@@ -1,5 +1,5 @@
 using Accounts.Api.Endpoints;
-using Accounts.Domain.Interfaces;
+using Accounts.Domain;
 using Accounts.Infrastructure.Repositories;
 using Scalar.AspNetCore;
 

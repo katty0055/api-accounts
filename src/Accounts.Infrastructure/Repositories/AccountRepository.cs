@@ -1,11 +1,9 @@
-﻿using Accounts.Domain.Entities;
-using Accounts.Domain.Interfaces;
+﻿using Accounts.Domain;
 
 namespace Accounts.Infrastructure.Repositories;
 
 public class AccountRepository : IAccountRepository
 {
-    // Lista simulada en memoria mientras conectas DbContext
     private static readonly List<Account> _accounts = new();
 
     public async Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
