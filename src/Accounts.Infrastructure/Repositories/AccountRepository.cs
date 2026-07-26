@@ -1,9 +1,9 @@
-﻿using Accounts.Domain;
-
-namespace Accounts.Infrastructure.Repositories;
+﻿namespace Accounts.Infrastructure.Repositories;
+using Accounts.Domain;
 
 public class AccountRepository : IAccountRepository
 {
+    // ES OBLIGATORIO QUE SEA 'static' para mantener los datos en memoria mientras corre la app
     private static readonly List<Account> _accounts = new();
 
     public async Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
