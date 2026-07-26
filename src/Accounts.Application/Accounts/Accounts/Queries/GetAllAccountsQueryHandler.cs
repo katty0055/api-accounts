@@ -1,18 +1,22 @@
-﻿using MediatR;
+﻿using Accounts.Domain.Interfaces;
+using MediatR;
 
 namespace Accounts.Application.Accounts.Queries.GetAllAccounts;
 
 public class GetAllAccountsQueryHandler : IRequestHandler<GetAllAccountsQuery, IReadOnlyList<AccountDto>>
 {
+    private readonly IAccountRepository _repository;
+
+    public GetAllAccountsQueryHandler(IAccountRepository repository)
+    {
+        _repository = repository;
+    }
+
     public async Task<IReadOnlyList<AccountDto>> Handle(GetAllAccountsQuery request, CancellationToken cancellationToken)
     {
-        // Simulamos una lista en memoria mientras configuramos la BD en Infraestructura
-        var accounts = new List<AccountDto>
-        {
-            new(Guid.NewGuid(), "ACC-1001", "Katty", 1500.00m, true),
-            new(Guid.NewGuid(), "ACC-1002", "Alex", 2300.50m, true)
-        };
+        var accounts = await _repository.GetAllAsync(cancellationToken);
 
-        return await Task.FromResult(accounts);
+        // Mapear entidades a DTOs
+        return accounts.Select(a => new AccountDto(a.Id, a.AccountNumber, a.OwnerName, a.Balance, a.IsActive)).ToList();
     }
 }

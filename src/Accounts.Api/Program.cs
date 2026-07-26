@@ -9,6 +9,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Accounts.Application.Accounts.AccountDto).Assembly));
 
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+
 var app = builder.Build();
 
 // 2. CONFIGURACIÓN DEL PIPELINE HTTP
