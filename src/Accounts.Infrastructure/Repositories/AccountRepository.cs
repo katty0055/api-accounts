@@ -1,26 +1,26 @@
 ﻿using Accounts.Domain.Entities;
 using Accounts.Domain.Interfaces;
-// using Accounts.Infrastructure.Persistence; // Tu DbContext de EF Core irá aquí
 
 namespace Accounts.Infrastructure.Repositories;
 
 public class AccountRepository : IAccountRepository
 {
-    // Inyectarás tu ApplicationDbContext cuando configuremos EF Core
+    // Lista simulada en memoria mientras conectas DbContext
+    private static readonly List<Account> _accounts = new();
 
     public async Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        // Lógica de consulta a la BD (ej. await _context.Accounts.ToListAsync(cancellationToken))
-        return new List<Account>();
-    }
-
-    public async Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return null;
+        return await Task.FromResult(_accounts.AsReadOnly());
     }
 
     public async Task AddAsync(Account account, CancellationToken cancellationToken = default)
     {
-        // await _context.Accounts.AddAsync(account, cancellationToken);
+        _accounts.Add(account);
+        await Task.CompletedTask;
+    }
+
+    public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await Task.FromResult(true);
     }
 }
