@@ -1,4 +1,4 @@
-namespace Accounts.Domain.Exceptions;
+﻿namespace Accounts.Domain.Exceptions;
 
 public class AccountNotFoundException(Guid accountId)
-    : DomainException($"No se encontr� la cuenta con id '{accountId}'.");
+    : DomainException($"No se encontró la cuenta con id '{accountId}'.");
