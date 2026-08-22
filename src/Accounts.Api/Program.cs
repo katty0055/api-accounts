@@ -1,7 +1,12 @@
 using Accounts.Api.Endpoints;
+using Accounts.Api.ErrorHandling;
+using Accounts.Application.Accounts.Commands.CreateAccount;
+using Accounts.Application.Common.Behaviors;
 using Accounts.Domain;
 using Accounts.Infrastructure.Persistence;
 using Accounts.Infrastructure.Repositories;
+using Asp.Versioning;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -20,13 +25,41 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Registrar MediatR desde el ensamblado de Application
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(Accounts.Application.Accounts.AccountDto).Assembly));
+{
+    cfg.RegisterServicesFromAssembly(typeof(Accounts.Application.Accounts.AccountDto).Assembly);
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+});
+
+// Registrar validadores de FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountCommandValidator>();
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+
+// Versionado de la API
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// Manejo centralizado de errores -> ProblemDetails
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
 // 2. CONFIGURACIÓN DEL PIPELINE HTTP
+app.UseExceptionHandler(_ => { });
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
