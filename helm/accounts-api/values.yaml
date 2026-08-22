@@ -2,7 +2,7 @@
 
 api:
   image:
-    repository: docker.io/19942709/accounts-api
+    repository: docker.io/katty0055/accounts-api
     tag: latest
     pullPolicy: Always
   replicas: 1

@@ -26,7 +26,7 @@ spec:
               done
       containers:
         - name: accounts-api
-          image: docker.io/19942709/accounts-api:latest
+          image: docker.io/katty0055/accounts-api:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
