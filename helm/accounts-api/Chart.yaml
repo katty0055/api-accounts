@@ -1,6 +1,6 @@
 apiVersion: v2
 name: accounts-api
-description: Chart de Helm para la API de cuentas con PostgreSQL
+description: Helm chart para desplegar la API de Accounts (CleanArchitecture.Full)
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

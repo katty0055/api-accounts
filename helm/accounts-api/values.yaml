@@ -1,40 +1,51 @@
-# Valores por defecto para el chart accounts-api
+replicaCount: 1
 
-api:
-  image:
-    repository: docker.io/katty0055/accounts-api
-    tag: latest
-    pullPolicy: Always
-  replicas: 1
-  containerPort: 8080
-  env:
-    aspnetcoreEnvironment: Development
-  service:
-    type: NodePort
-    port: 8080
-    nodePort: 30080
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 256Mi
+nameOverride: ""
+fullnameOverride: ""
 
+image:
+  repository: docker.io/katty0055/accounts-api
+  tag: latest
+  pullPolicy: Always
+
+containerPort: 8080
+
+# Datos no sensibles -> ConfigMap
+appName: CleanArchitecture.Full.Api
+aspnetEnvironment: Development
+
+# Datos de conexión a la base -> Secret (se arma la connection string en el template)
 postgres:
-  image:
-    repository: postgres
-    tag: "16"
+  host: postgres
+  port: 5432
   database: accountsdb
   username: postgres
   password: postgres
-  service:
-    port: 5432
-  storage: 1Gi
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+
+service:
+  type: NodePort
+  port: 8080
+  targetPort: 8080
+  nodePort: 30080
+
+# Init container que espera a que Postgres esté listo antes de arrancar la API
+waitForPostgres:
+  enabled: true
+  image: postgres:16
+
+probes:
+  path: /api/v1/accounts
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  liveness:
+    initialDelaySeconds: 20
+    periodSeconds: 15
+
+resources: {}
+  # limits:
+  #   cpu: 250m
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
