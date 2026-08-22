@@ -9,7 +9,7 @@ Para acceder a la API en Minikube:
 
 O directamente (NodePort {{ .Values.api.service.nodePort }}):
 
-  curl http://$(minikube ip):{{ .Values.api.service.nodePort }}/api/accounts
+  curl http://$(minikube ip):{{ .Values.api.service.nodePort }}/api/v1/accounts
 
 Ver el estado de los pods:
 

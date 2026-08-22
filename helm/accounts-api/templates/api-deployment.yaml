@@ -40,13 +40,13 @@ spec:
             {{- toYaml .Values.api.resources | nindent 12 }}
           readinessProbe:
             httpGet:
-              path: /api/accounts
+              path: /api/v1/accounts
               port: {{ .Values.api.containerPort }}
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /api/accounts
+              path: /api/v1/accounts
               port: {{ .Values.api.containerPort }}
             initialDelaySeconds: 20
             periodSeconds: 15
