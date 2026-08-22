@@ -12,9 +12,7 @@ public class UpdateAccountCommandHandler(IAccountRepository repository)
         var account = await repository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new AccountNotFoundException(request.Id);
 
-        account.OwnerName = request.OwnerName;
-        account.Balance = request.Balance;
-        account.IsActive = request.IsActive;
+        account.Update(request.OwnerName, request.Balance, request.IsActive);
 
         repository.Update(account);
         await repository.SaveChangesAsync(cancellationToken);
