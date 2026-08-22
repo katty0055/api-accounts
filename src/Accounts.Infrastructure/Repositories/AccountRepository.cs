@@ -14,10 +14,33 @@ public class AccountRepository(ApplicationDbContext context) : IAccountRepositor
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+    }
+
+    public async Task<bool> ExistsByAccountNumberAsync(string accountNumber, CancellationToken cancellationToken = default)
+    {
+        return await context.Accounts
+            .AsNoTracking()
+            .AnyAsync(a => a.AccountNumber == accountNumber, cancellationToken);
+    }
+
     public async Task AddAsync(Account account, CancellationToken cancellationToken = default)
     {
         // Prepara la inserción en el DbContext
         await context.Accounts.AddAsync(account, cancellationToken);
+    }
+
+    public void Update(Account account)
+    {
+        context.Accounts.Update(account);
+    }
+
+    public void Delete(Account account)
+    {
+        context.Accounts.Remove(account);
     }
 
     public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default)
