@@ -57,6 +57,13 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+// Aplicar migraciones pendientes al iniciar (necesario para contenedores con BD nueva)
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // 2. CONFIGURACIÓN DEL PIPELINE HTTP
 app.UseExceptionHandler(_ => { });
 
