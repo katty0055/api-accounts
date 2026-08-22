@@ -1,5 +1,4 @@
 ﻿using Accounts.Application.Accounts;
-using Accounts.Application.Accounts;
 using Accounts.Application.Accounts.Commands.CreateAccount;
 using Accounts.Application.Accounts.Commands.DeleteAccount;
 using Accounts.Application.Accounts.Commands.UpdateAccount;
@@ -130,5 +129,3 @@ public static class AccountEndpoints
         ["isActive"] = account.IsActive
     };
 }
-
-public record UpdateAccountRequest(string OwnerName, decimal Balance, bool IsActive);
