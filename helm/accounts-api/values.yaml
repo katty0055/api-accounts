@@ -1,0 +1,40 @@
+# Valores por defecto para el chart accounts-api
+
+api:
+  image:
+    repository: docker.io/19942709/accounts-api
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  env:
+    aspnetcoreEnvironment: Development
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+postgres:
+  image:
+    repository: postgres
+    tag: "16"
+  database: accountsdb
+  username: postgres
+  password: postgres
+  service:
+    port: 5432
+  storage: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
