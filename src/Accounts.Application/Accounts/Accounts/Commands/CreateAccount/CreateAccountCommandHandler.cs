@@ -1,4 +1,5 @@
 ﻿using Accounts.Domain;
+using Accounts.Domain.Exceptions;
 using MediatR;
 
 namespace Accounts.Application.Accounts.Commands.CreateAccount;
@@ -8,6 +9,11 @@ public class CreateAccountCommandHandler(IAccountRepository repository)
 {
     public async Task<AccountDto> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
     {
+        if (await repository.ExistsByAccountNumberAsync(request.AccountNumber, cancellationToken))
+        {
+            throw new DuplicateAccountNumberException(request.AccountNumber);
+        }
+
         var account = new Account
         {
             Id = Guid.NewGuid(),
