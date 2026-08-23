@@ -1,5 +1,6 @@
 using Accounts.Api.Endpoints;
 using Accounts.Api.ErrorHandling;
+using Accounts.Api.Middleware;
 using Accounts.Application.Accounts.Commands.CreateAccount;
 using Accounts.Application.Common.Behaviors;
 using Accounts.Domain;
@@ -9,8 +10,23 @@ using Asp.Versioning;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logging estructurado con Serilog (consola + Seq para centralización)
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+{
+    var seqUrl = context.Configuration["Seq:ServerUrl"] ?? "http://localhost:5341";
+
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", "Accounts.Api")
+        .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
+        .WriteTo.Console()
+        .WriteTo.Seq(seqUrl);
+});
 
 // 1. REGISTRO DE SERVICIOS (Antes de builder.Build)
 builder.Services.AddOpenApi();
@@ -65,13 +81,16 @@ using (var scope = app.Services.CreateScope())
 }
 
 // 2. CONFIGURACIÓN DEL PIPELINE HTTP
+app.UseSerilogRequestLogging();
+
 app.UseExceptionHandler(_ => { });
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+// Logging estructurado por request: Information (éxito), Warning (validación) y Error (excepciones).
+// Va después de UseExceptionHandler para poder observar las excepciones antes de que se conviertan en ProblemDetails.
+app.UseRequestLogging();
+
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.UseHttpsRedirection();
 
