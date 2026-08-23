@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seq
+  namespace: accounts
+  labels:
+    app: seq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seq
+  template:
+    metadata:
+      labels:
+        app: seq
+    spec:
+      containers:
+        - name: seq
+          image: datalust/seq:latest
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SEQ_FIRSTRUN_NOAUTHENTICATION
+              value: "true"
+          ports:
+            - containerPort: 80
+              name: ui-ingest
+          volumeMounts:
+            - name: seq-data
+              mountPath: /data
+      volumes:
+        - name: seq-data
+          persistentVolumeClaim:
+            claimName: seq-pvc
