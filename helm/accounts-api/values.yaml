@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 2
 
 nameOverride: ""
 fullnameOverride: ""
@@ -46,10 +46,10 @@ probes:
     initialDelaySeconds: 20
     periodSeconds: 15
 
-resources: {}
-  # limits:
-  #   cpu: 250m
-  #   memory: 256Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

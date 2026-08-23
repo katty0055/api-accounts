@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using FluentValidation;
+using Serilog.Context;
 
 namespace Accounts.Api.Middleware;
 
@@ -10,6 +11,9 @@ public static class RequestLoggingMiddlewareExtensions
         {
             var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
                 .CreateLogger("Accounts.Api.Middleware.RequestLogging");
+
+            // RequestId estructurado para correlacionar eventos entre réplicas en Seq.
+            using var _ = LogContext.PushProperty("RequestId", context.TraceIdentifier);
 
             var stopwatch = Stopwatch.StartNew();
 

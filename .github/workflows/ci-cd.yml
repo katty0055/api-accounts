@@ -1,0 +1,143 @@
+name: CI-CD Accounts API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Build and test
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: meta
+        shell: bash
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Accounts.slnx
+
+      - name: Build
+        run: dotnet build Accounts.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Accounts.slnx --configuration Release --no-build --verbosity normal
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Validate Helm chart
+        run: |
+          helm lint helm/accounts-api
+          helm lint helm/accounts-api -f helm/accounts-api/values-dev.yaml
+          helm lint helm/accounts-api -f helm/accounts-api/values-qa.yaml
+          helm template accounts-api helm/accounts-api > /dev/null
+
+  package:
+    name: Build and publish Docker image
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          # Variable (no sensible) para el usuario, Secret para la credencial
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/accounts-api:${{ needs.validate.outputs.image_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/accounts-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  cd:
+    name: Deploy to local Minikube
+    needs: [validate, package]
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Minikube context
+        shell: powershell
+        run: |
+          minikube status
+          kubectl config use-context minikube
+          kubectl cluster-info
+
+      - name: Deploy PostgreSQL and Seq
+        shell: powershell
+        run: |
+          kubectl apply -f k8s/00-namespace.yaml
+          kubectl apply -f k8s
+          kubectl rollout status statefulset/postgres --namespace accounts --timeout=120s
+          kubectl rollout status deployment/seq --namespace accounts --timeout=120s
+
+      - name: Apply database schema and seed
+        shell: powershell
+        run: |
+          Get-Content database/01-create-database.sql -Raw |
+            kubectl exec --stdin statefulset/postgres --namespace accounts -- `
+              psql -v ON_ERROR_STOP=1 -U postgres
+          Get-Content database/02-create-tables.sql -Raw |
+            kubectl exec --stdin statefulset/postgres --namespace accounts -- `
+              psql -v ON_ERROR_STOP=1 -U postgres -d accountsdb
+          Get-Content database/03-seed-data.sql -Raw |
+            kubectl exec --stdin statefulset/postgres --namespace accounts -- `
+              psql -v ON_ERROR_STOP=1 -U postgres -d accountsdb
+
+      - name: Deploy API with Helm
+        shell: powershell
+        run: |
+          helm upgrade --install accounts-api ./helm/accounts-api `
+            --namespace accounts `
+            --create-namespace `
+            -f helm/accounts-api/values-dev.yaml `
+            --set image.repository=docker.io/${{ vars.DOCKERHUB_USERNAME }}/accounts-api `
+            --set image.tag=${{ needs.validate.outputs.image_tag }} `
+            --set image.pullPolicy=Always `
+            --wait `
+            --timeout 3m
+
+      - name: Verify API rollout
+        shell: powershell
+        run: |
+          kubectl rollout status deployment/accounts-api --namespace accounts --timeout=120s
+          kubectl get pods,services --namespace accounts

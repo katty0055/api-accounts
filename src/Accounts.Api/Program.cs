@@ -24,6 +24,7 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Application", "Accounts.Api")
         .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
+        .Enrich.WithProperty("PodName", Environment.MachineName)
         .WriteTo.Console()
         .WriteTo.Seq(seqUrl);
 });

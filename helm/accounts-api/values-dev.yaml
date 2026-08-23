@@ -1,0 +1,25 @@
+# Valores para el entorno de desarrollo
+replicaCount: 2
+
+aspnetEnvironment: Development
+
+image:
+  tag: latest
+  pullPolicy: Always
+
+postgres:
+  database: accountsdb
+  username: postgres
+  password: postgres
+
+service:
+  type: NodePort
+  nodePort: 30080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

@@ -1,0 +1,25 @@
+# Valores para el entorno de QA
+replicaCount: 3
+
+aspnetEnvironment: Staging
+
+image:
+  tag: latest
+  pullPolicy: Always
+
+postgres:
+  database: accountsdb_qa
+  username: postgres
+  password: postgres-qa
+
+service:
+  type: NodePort
+  nodePort: 30081
+
+resources:
+  requests:
+    cpu: 150m
+    memory: 192Mi
+  limits:
+    cpu: 500m
+    memory: 384Mi
