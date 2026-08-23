@@ -13,6 +13,22 @@ public static class RequestLoggingMiddlewareExtensions
 
             var stopwatch = Stopwatch.StartNew();
 
+            var routeValues = context.Request.RouteValues
+                .ToDictionary(item => item.Key, item => item.Value?.ToString());
+
+            var queryParameters = context.Request.Query
+                .ToDictionary(item => item.Key, item => item.Value.ToArray());
+
+            var requestBody = await ReadRequestBodyAsync(context.Request, context.RequestAborted);
+
+            logger.LogInformation(
+                "Iniciando HTTP {Method} {Path}. Route: {@RouteValues}, Query: {@QueryParameters}, Body: {RequestBody}",
+                context.Request.Method,
+                context.Request.Path,
+                routeValues,
+                queryParameters,
+                requestBody);
+
             try
             {
                 await next(context);
@@ -60,4 +76,21 @@ public static class RequestLoggingMiddlewareExtensions
                 throw;
             }
         });
+
+    // Lee el body del request dejándolo disponible para el resto del pipeline (EnableBuffering).
+    private static async Task<string> ReadRequestBodyAsync(HttpRequest request, CancellationToken cancellationToken)
+    {
+        if (request.ContentLength is null or 0)
+        {
+            return string.Empty;
+        }
+
+        request.EnableBuffering();
+
+        using var reader = new StreamReader(request.Body, leaveOpen: true);
+        var body = await reader.ReadToEndAsync(cancellationToken);
+        request.Body.Position = 0;
+
+        return body;
+    }
 }
