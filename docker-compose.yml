@@ -8,9 +8,22 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ConnectionStrings__DefaultConnection: "Host=accounts-db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Seq__ServerUrl: "http://seq:5341"
     depends_on:
       accounts-db:
         condition: service_healthy
+      seq:
+        condition: service_started
+
+  seq:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "${SEQ_UI_PORT:-5341}:80"
+    volumes:
+      - seq-data:/data
 
   accounts-db:
     image: postgres:16
@@ -30,3 +43,4 @@ services:
 
 volumes:
   accounts-db-data:
+  seq-data:
