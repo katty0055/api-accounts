@@ -14,6 +14,10 @@ containerPort: 8080
 appName: CleanArchitecture.Full.Api
 aspnetEnvironment: Development
 
+# Centralización de logs -> Seq (service interno del clúster)
+seq:
+  serverUrl: http://seq
+
 # Datos de conexión a la base -> Secret (se arma la connection string en el template)
 postgres:
   host: postgres
